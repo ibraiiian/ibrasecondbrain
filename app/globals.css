@@ -7,20 +7,25 @@
 
 :root {
   /* Core Colors */
-  --background: #0f0f0f;
-  --foreground: #ededed;
-  --card: #1a1a1a;
-  --card-hover: #222222;
-  
+  --background: #191919;
+  --sidebar-bg: #202020;
+  --foreground: #FFFFFF;
+
+  --card: #202020;
+  --card-hover: #2C2C2C;
+
   /* Accent Colors */
   --accent-lime: #D1F441;
+  /* Keeping brand accent */
   --accent-blue: #5D5FEF;
-  
+
   /* Border */
-  --border: rgba(255, 255, 255, 0.1);
-  
+  --border: #2F2F2F;
+
   /* Text */
-  --text-muted: rgba(255, 255, 255, 0.6);
+  --text-primary: #FFFFFF;
+  --text-secondary: #9B9B9B;
+  --text-muted: #6E6E6E;
 }
 
 @theme inline {

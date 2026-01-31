@@ -2,30 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import {
-    Brain,
-    LogOut,
-    Loader2,
     FileText,
     Lock,
     Sparkles,
     Image,
-    ChevronRight,
-    Plus,
-    FolderOpen,
+    Clock,
+    ArrowUpRight,
+    Search
 } from "lucide-react";
-import { onAuthChange, signOut } from "@/lib/auth";
+import { onAuthChange } from "@/lib/auth";
 import { User } from "firebase/auth";
 import { subscribeToNotes, Note } from "@/lib/notes";
 import { subscribeToPrompts, Prompt } from "@/lib/prompts";
 import { subscribeToAssets, Asset } from "@/lib/assets";
 import { subscribeToDocuments, Document } from "@/lib/documents";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 export default function DashboardPage() {
     const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
 
     // Stats
     const [notes, setNotes] = useState<Note[]>([]);
@@ -35,18 +31,14 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const unsubscribe = onAuthChange((currentUser: User | null) => {
-            if (!currentUser) {
-                router.push("/");
-            } else {
+            if (currentUser) {
                 setUser(currentUser);
-                setLoading(false);
             }
         });
-
         return () => unsubscribe();
-    }, [router]);
+    }, []);
 
-    // Subscribe to data for stats
+    // Subscribe to data
     useEffect(() => {
         if (!user) return;
 
@@ -63,207 +55,119 @@ export default function DashboardPage() {
         };
     }, [user]);
 
-    const handleSignOut = async () => {
-        await signOut();
-        router.push("/");
+    // Calculate stats
+    const recentNotes = notes.slice(0, 5); // Show more recent items
+
+    // Determine greeting based on time
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good morning";
+        if (hour < 18) return "Good afternoon";
+        return "Good evening";
     };
 
-    // Calculate stats
-    const noteCount = notes.filter((n) => n.type === "NOTE").length;
-    const passwordCount = notes.filter((n) => n.type === "PASSWORD").length;
-    const promptCount = prompts.length;
-    const assetCount = assets.length;
-    const documentCount = documents.length;
-
-    // Recent items
-    const recentNotes = notes.slice(0, 3);
-
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
-                <Loader2 className="w-8 h-8 text-[#D1F441] animate-spin" />
-            </div>
-        );
-    }
-
     return (
-        <main className="min-h-screen bg-[#0f0f0f] p-4 sm:p-6">
-            {/* Header */}
-            <motion.header
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between mb-8"
-            >
-                <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 flex items-center justify-center">
-                        <img src="/logo.png" alt="IbraBrain" className="w-full h-full object-contain" />
+        <DashboardLayout>
+            <div className="max-w-4xl mx-auto py-12 px-8">
+                {/* Header Section */}
+                <div className="mb-12 group relative">
+                    {/* Cover Placeholder - Icon */}
+                    <div className="absolute -top-16 left-0 text-7xl select-none animate-in fade-in zoom-in duration-300">
+                        🧠
                     </div>
-                    <h1 className="text-xl font-bold text-white">IbraBrain</h1>
+
+                    <h1 className="text-4xl font-bold text-[#FFFFFF] mt-4 mb-2">
+                        {getGreeting()}, {user?.displayName?.split(" ")[0] || "User"}
+                    </h1>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    {user?.photoURL && (
-                        <img
-                            src={user.photoURL}
-                            alt={user.displayName || "User"}
-                            className="w-8 h-8 rounded-full border border-white/10"
-                        />
-                    )}
-                    <button
-                        onClick={handleSignOut}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#1a1a1a] border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-all text-sm"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        <span className="hidden sm:inline">Sign Out</span>
-                    </button>
+                {/* Callout Blocks (Quick Stats) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+                    <div className="p-4 bg-[#202020] rounded-md border border-[#2F2F2F] flex items-start gap-4 hover:bg-[#252525] transition-colors cursor-pointer" onClick={() => router.push('/notes')}>
+                        <FileText className="w-5 h-5 text-[#9B9B9B] mt-0.5" />
+                        <div>
+                            <h3 className="text-[#FFFFFF] font-medium mb-1">Quick Note</h3>
+                            <p className="text-sm text-[#9B9B9B]">Capture a thought...</p>
+                        </div>
+                    </div>
+                    <div className="p-4 bg-[#202020] rounded-md border border-[#2F2F2F] flex items-start gap-4 hover:bg-[#252525] transition-colors cursor-pointer" onClick={() => router.push('/creative')}>
+                        <Sparkles className="w-5 h-5 text-[#9B9B9B] mt-0.5" />
+                        <div>
+                            <h3 className="text-[#FFFFFF] font-medium mb-1">New Prompt</h3>
+                            <p className="text-sm text-[#9B9B9B]">Ask AI something...</p>
+                        </div>
+                    </div>
                 </div>
-            </motion.header>
 
-            {/* Welcome */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05 }}
-                className="mb-8"
-            >
-                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                    Welcome back, {user?.displayName?.split(" ")[0] || "User"}! 👋
-                </h2>
-                <p className="text-white/50">Your digital brain is ready.</p>
-            </motion.div>
+                {/* 3-Column Shortcuts / Wiki Style */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                    {/* Column 1: Workspace */}
+                    <div className="space-y-2">
+                        <h2 className="text-sm font-semibold text-[#9B9B9B] mb-3 uppercase tracking-wider">Workspace</h2>
+                        <button onClick={() => router.push('/notes')} className="w-full flex items-center gap-2 p-1 hover:bg-[#2C2C2C] rounded-sm text-[#FFFFFF] transition-colors group">
+                            <div className="w-5 h-5 flex items-center justify-center bg-[#2C2C2C] group-hover:bg-[#3F3F3F] rounded text-xs">📝</div>
+                            <span className="text-sm border-b border-transparent group-hover:border-[#5A5A5A]">All Notes</span>
+                        </button>
+                        <button onClick={() => router.push('/documents')} className="w-full flex items-center gap-2 p-1 hover:bg-[#2C2C2C] rounded-sm text-[#FFFFFF] transition-colors group">
+                            <div className="w-5 h-5 flex items-center justify-center bg-[#2C2C2C] group-hover:bg-[#3F3F3F] rounded text-xs">📂</div>
+                            <span className="text-sm border-b border-transparent group-hover:border-[#5A5A5A]">Documents</span>
+                        </button>
+                        <button onClick={() => router.push('/vault')} className="w-full flex items-center gap-2 p-1 hover:bg-[#2C2C2C] rounded-sm text-[#FFFFFF] transition-colors group">
+                            <div className="w-5 h-5 flex items-center justify-center bg-[#2C2C2C] group-hover:bg-[#3F3F3F] rounded text-xs">🔐</div>
+                            <span className="text-sm border-b border-transparent group-hover:border-[#5A5A5A]">Vault</span>
+                        </button>
+                    </div>
 
-            {/* Bento Grid Layout */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Notes Widget */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.1 }}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => router.push("/notes")}
-                    className="col-span-2 bg-gradient-to-br from-[#1a1a1a] to-[#1a1a1a]/50 rounded-2xl border border-white/10 hover:border-[#D1F441]/30 p-6 cursor-pointer transition-all group"
-                >
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-xl bg-[#D1F441]/10 flex items-center justify-center">
-                                <FileText className="w-6 h-6 text-[#D1F441]" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold text-white">Notes</h3>
-                                <p className="text-sm text-white/40">{noteCount} notes</p>
-                            </div>
+                    {/* Column 2: Creative */}
+                    <div className="space-y-2">
+                        <h2 className="text-sm font-semibold text-[#9B9B9B] mb-3 uppercase tracking-wider">Creative</h2>
+                        <button onClick={() => router.push('/creative')} className="w-full flex items-center gap-2 p-1 hover:bg-[#2C2C2C] rounded-sm text-[#FFFFFF] transition-colors group">
+                            <div className="w-5 h-5 flex items-center justify-center bg-[#2C2C2C] group-hover:bg-[#3F3F3F] rounded text-xs">✨</div>
+                            <span className="text-sm border-b border-transparent group-hover:border-[#5A5A5A]">AI Prompts</span>
+                        </button>
+                        <button onClick={() => router.push('/creative')} className="w-full flex items-center gap-2 p-1 hover:bg-[#2C2C2C] rounded-sm text-[#FFFFFF] transition-colors group">
+                            <div className="w-5 h-5 flex items-center justify-center bg-[#2C2C2C] group-hover:bg-[#3F3F3F] rounded text-xs">🎨</div>
+                            <span className="text-sm border-b border-transparent group-hover:border-[#5A5A5A]">Assets</span>
+                        </button>
+                    </div>
+
+                    {/* Column 3: Stats */}
+                    <div className="space-y-2">
+                        <h2 className="text-sm font-semibold text-[#9B9B9B] mb-3 uppercase tracking-wider">Overview</h2>
+                        <div className="flex items-center justify-between text-sm py-1 border-b border-[#2F2F2F]">
+                            <span className="text-[#9B9B9B]">Total Notes</span>
+                            <span className="text-[#FFFFFF]">{notes.length}</span>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-white/30 group-hover:text-[#D1F441] group-hover:translate-x-1 transition-all" />
-                    </div>
-                    {/* Recent Notes */}
-                    {recentNotes.length > 0 ? (
-                        <div className="space-y-2">
-                            {recentNotes.map((note) => (
-                                <div
-                                    key={note.id}
-                                    className="flex items-center gap-2 text-sm text-white/60 truncate"
-                                >
-                                    {note.type === "PASSWORD" ? (
-                                        <Lock className="w-3 h-3 text-amber-400" />
-                                    ) : (
-                                        <FileText className="w-3 h-3" />
-                                    )}
-                                    <span className="truncate">{note.title || "Untitled"}</span>
-                                </div>
-                            ))}
+                        <div className="flex items-center justify-between text-sm py-1 border-b border-[#2F2F2F]">
+                            <span className="text-[#9B9B9B]">Vault Items</span>
+                            <span className="text-[#FFFFFF]">{notes.filter(n => n.type === 'PASSWORD').length}</span>
                         </div>
-                    ) : (
-                        <p className="text-sm text-white/30 italic">No notes yet</p>
-                    )}
-                </motion.div>
-
-                {/* Passwords Widget */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.15 }}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => router.push("/notes")}
-                    className="bg-gradient-to-br from-[#1a1a1a] to-[#1a1a1a]/50 rounded-2xl border border-white/10 hover:border-amber-400/30 p-6 cursor-pointer transition-all"
-                >
-                    <div className="w-12 h-12 rounded-xl bg-amber-400/10 flex items-center justify-center mb-3">
-                        <Lock className="w-6 h-6 text-amber-400" />
-                    </div>
-                    <h3 className="text-3xl font-bold text-white">{passwordCount}</h3>
-                    <p className="text-sm text-white/40">Passwords</p>
-                </motion.div>
-
-                {/* Prompts Widget */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.2 }}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => router.push("/creative")}
-                    className="bg-gradient-to-br from-[#1a1a1a] to-[#1a1a1a]/50 rounded-2xl border border-white/10 hover:border-[#D1F441]/30 p-6 cursor-pointer transition-all"
-                >
-                    <div className="w-12 h-12 rounded-xl bg-[#D1F441]/10 flex items-center justify-center mb-3">
-                        <Sparkles className="w-6 h-6 text-[#D1F441]" />
-                    </div>
-                    <h3 className="text-3xl font-bold text-white">{promptCount}</h3>
-                    <p className="text-sm text-white/40">AI Prompts</p>
-                </motion.div>
-
-                {/* Documents Widget */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.22 }}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => router.push("/documents")}
-                    className="bg-gradient-to-br from-[#1a1a1a] to-[#1a1a1a]/50 rounded-2xl border border-white/10 hover:border-cyan-400/30 p-6 cursor-pointer transition-all"
-                >
-                    <div className="w-12 h-12 rounded-xl bg-cyan-400/10 flex items-center justify-center mb-3">
-                        <FolderOpen className="w-6 h-6 text-cyan-400" />
-                    </div>
-                    <h3 className="text-3xl font-bold text-white">{documentCount}</h3>
-                    <p className="text-sm text-white/40">Documents</p>
-                </motion.div>
-
-                {/* Creative Hub Widget */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.25 }}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => router.push("/creative")}
-                    className="col-span-2 bg-gradient-to-br from-[#5D5FEF]/10 to-[#1a1a1a] rounded-2xl border border-white/10 hover:border-[#5D5FEF]/30 p-6 cursor-pointer transition-all group"
-                >
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-xl bg-[#5D5FEF]/20 flex items-center justify-center">
-                                <Image className="w-6 h-6 text-[#5D5FEF]" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold text-white">Creative Hub</h3>
-                                <p className="text-sm text-white/40">
-                                    {assetCount} assets · {promptCount} prompts
-                                </p>
-                            </div>
+                        <div className="flex items-center justify-between text-sm py-1 border-b border-[#2F2F2F]">
+                            <span className="text-[#9B9B9B]">Assets</span>
+                            <span className="text-[#FFFFFF]">{assets.length}</span>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-white/30 group-hover:text-[#5D5FEF] group-hover:translate-x-1 transition-all" />
                     </div>
-                </motion.div>
+                </div>
 
-                {/* Quick Add Button */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => router.push("/notes")}
-                    className="col-span-2 bg-[#D1F441] hover:bg-[#c5e83b] rounded-2xl p-6 cursor-pointer transition-all flex items-center justify-center gap-3"
-                >
-                    <Plus className="w-6 h-6 text-[#0f0f0f]" />
-                    <span className="text-lg font-bold text-[#0f0f0f]">Quick Add Note</span>
-                </motion.div>
+                {/* Recently Viewed */}
+                <div>
+                    <h2 className="text-sm font-semibold text-[#9B9B9B] mb-3 pb-2 border-b border-[#2F2F2F]">Recently Viewed</h2>
+                    <div className="space-y-1">
+                        {recentNotes.length > 0 ? recentNotes.map(note => (
+                            <div key={note.id} className="flex items-center gap-2 p-2 hover:bg-[#2C2C2C] rounded-sm cursor-pointer group" onClick={() => router.push('/notes')}>
+                                <FileText className="w-4 h-4 text-[#9B9B9B]" />
+                                <span className="text-sm text-[#FFFFFF] group-hover:underline decoration-[#5A5A5A] underline-offset-4">{note.title || "Untitled"}</span>
+                                <span className="text-xs text-[#5A5A5A] ml-auto">
+                                    {note.updatedAt?.seconds ? new Date(note.updatedAt.seconds * 1000).toLocaleDateString() : 'Just now'}
+                                </span>
+                            </div>
+                        )) : (
+                            <p className="text-sm text-[#5A5A5A] italic pl-2">No recent items</p>
+                        )}
+                    </div>
+                </div>
             </div>
-        </main>
+        </DashboardLayout>
     );
 }
+
