@@ -18,12 +18,14 @@ import {
 import { cn } from "@/lib/utils";
 import { User } from "firebase/auth";
 
-interface SidebarProps {
+export interface SidebarProps {
     user: User | null;
     onSignOut: () => void;
+    mobileOpen?: boolean;
+    setMobileOpen?: (open: boolean) => void;
 }
 
-export function Sidebar({ user, onSignOut }: SidebarProps) {
+export function Sidebar({ user, onSignOut, mobileOpen = false, setMobileOpen }: SidebarProps) {
     const router = useRouter();
     const pathname = usePathname();
     const [isFavoritesOpen, setIsFavoritesOpen] = useState(true);
@@ -37,8 +39,8 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
         { name: "Documents", href: "/documents", icon: FolderOpen },
     ];
 
-    return (
-        <aside className="w-60 h-screen bg-[#202020] border-r border-[#2F2F2F] flex flex-col text-[#9B9B9B]">
+    const sidebarContent = (
+        <aside className="w-60 h-full bg-[#202020] border-r border-[#2F2F2F] flex flex-col text-[#9B9B9B]">
             {/* User Profile / Workspace Switcher */}
             <div className="h-12 flex items-center px-4 hover:bg-[#2C2C2C] cursor-pointer transition-colors m-1 rounded-sm">
                 <div className="flex items-center gap-2 overflow-hidden">
@@ -107,7 +109,10 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
                             {navigation.map((item) => (
                                 <div
                                     key={item.href}
-                                    onClick={() => router.push(item.href)}
+                                    onClick={() => {
+                                        router.push(item.href);
+                                        if (setMobileOpen) setMobileOpen(false);
+                                    }}
                                     className={cn(
                                         "flex items-center gap-2 px-3 py-1.5 rounded-sm cursor-pointer text-sm group min-h-[28px]",
                                         pathname === item.href ? "bg-[#2C2C2C] text-[#FFFFFF]" : "hover:bg-[#2C2C2C] text-[#9B9B9B]"
@@ -142,5 +147,29 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
                 </div>
             </div>
         </aside>
+    );
+
+    return (
+        <>
+            {/* Desktop Sidebar */}
+            <div className="hidden md:block h-screen sticky top-0">
+                {sidebarContent}
+            </div>
+
+            {/* Mobile Sidebar */}
+            {mobileOpen && (
+                <div className="fixed inset-0 z-50 md:hidden">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setMobileOpen && setMobileOpen(false)}
+                    />
+                    {/* Sidebar */}
+                    <div className="absolute inset-y-0 left-0 w-60 bg-[#202020] shadow-xl transform transition-transform duration-300 ease-in-out">
+                        {sidebarContent}
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
