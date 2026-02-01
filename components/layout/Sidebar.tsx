@@ -63,7 +63,10 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
                     <span>Search</span>
                     <span className="ml-auto text-xs opacity-0 group-hover:opacity-100 border border-[#3F3F3F] rounded px-1">Ctrl K</span>
                 </div>
-                <div className="h-7 flex items-center px-3 hover:bg-[#2C2C2C] rounded-sm cursor-pointer text-sm gap-3">
+                <div
+                    className="h-7 flex items-center px-3 hover:bg-[#2C2C2C] rounded-sm cursor-pointer text-sm gap-3"
+                    onClick={() => router.push('/settings')}
+                >
                     <Settings className="w-4 h-4" />
                     <span>Settings</span>
                 </div>
