@@ -26,6 +26,7 @@ import {
 import DocumentCard from "@/components/DocumentCard";
 import DocumentUploader from "@/components/DocumentUploader";
 import DocumentModal from "@/components/DocumentModal";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 type FilterType = "all" | DocumentCategory;
 
@@ -104,52 +105,21 @@ export default function DocumentsPage() {
     }
 
     return (
-        <main className="min-h-screen bg-[#0f0f0f]">
-            {/* Header */}
-            <header className="sticky top-0 z-40 bg-[#0f0f0f]/80 backdrop-blur-lg border-b border-white/10">
-                <div className="max-w-7xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => router.push("/dashboard")}
-                                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                            >
-                                <ArrowLeft className="w-5 h-5 text-white/60" />
-                            </button>
-                            <div className="flex items-center gap-3">
-                                <div className="w-14 h-14 flex items-center justify-center">
-                                    <img src="/logo.png" alt="IbraBrain" className="w-full h-full object-contain" />
-                                </div>
-                                <div>
-                                    <h1 className="text-xl font-bold text-white">Documents</h1>
-                                    <p className="text-xs text-white/40">{documents.length} documents</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            {user?.photoURL && (
-                                <img
-                                    src={user.photoURL}
-                                    alt={user.displayName || "User"}
-                                    className="w-8 h-8 rounded-full border border-white/10"
-                                />
-                            )}
-                            <button
-                                onClick={handleSignOut}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#1a1a1a] border border-white/10 text-white/60 hover:text-white transition-all text-sm"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                <span className="hidden sm:inline">Sign Out</span>
-                            </button>
+        <DashboardLayout>
+            <div className="max-w-7xl mx-auto py-12 px-8">
+                {/* Header Section */}
+                <div className="mb-8 relative group">
+                    <div className="flex items-center gap-4">
+                        <div className="text-6xl select-none">📂</div>
+                        <div>
+                            <h1 className="text-4xl font-bold text-[#FFFFFF] mb-1">Documents</h1>
+                            <p className="text-[#9B9B9B] text-lg">Manage your files and resources.</p>
                         </div>
                     </div>
                 </div>
-            </header>
 
-            {/* Filter Tabs */}
-            <div className="sticky top-[73px] z-30 bg-[#0f0f0f]/80 backdrop-blur-lg border-b border-white/10">
-                <div className="max-w-7xl mx-auto px-4 py-3">
+                {/* Filter Tabs */}
+                <div className="mb-6 pb-2 border-b border-[#2F2F2F]">
                     <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
                         <FilterTab
                             active={activeFilter === "all"}
@@ -170,72 +140,72 @@ export default function DocumentsPage() {
                         ))}
                     </div>
                 </div>
+
+                {/* Content */}
+                <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+                    {/* Uploader */}
+                    {user && <DocumentUploader userId={user.uid} />}
+
+                    {/* Document List */}
+                    <AnimatePresence mode="wait">
+                        {filteredDocuments.length === 0 ? (
+                            <motion.div
+                                key="empty"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
+                                className="flex flex-col items-center justify-center py-16 text-center"
+                            >
+                                <div className="w-20 h-20 rounded-2xl bg-[#1a1a1a] border border-white/10 flex items-center justify-center mb-4">
+                                    <FolderOpen className="w-10 h-10 text-[#D1F441]/50" />
+                                </div>
+                                <h3 className="text-xl font-semibold text-white mb-2">
+                                    {activeFilter === "all" ? "No documents yet" : `No ${activeFilter} documents`}
+                                </h3>
+                                <p className="text-white/40 mb-6 max-w-sm">
+                                    Upload your first document to get started
+                                </p>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="list"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="space-y-3"
+                            >
+                                {filteredDocuments.map((doc) => (
+                                    <DocumentCard
+                                        key={doc.id}
+                                        document={doc}
+                                        onEdit={() => handleEdit(doc)}
+                                        onDelete={() => setDeleteConfirm(doc)}
+                                    />
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
+                {/* Edit Modal */}
+                <DocumentModal
+                    isOpen={editModalOpen}
+                    onClose={() => {
+                        setEditModalOpen(false);
+                        setSelectedDocument(null);
+                    }}
+                    document={selectedDocument}
+                />
+
+                {/* Delete Confirmation */}
+                <DeleteConfirmModal
+                    isOpen={!!deleteConfirm}
+                    onClose={() => setDeleteConfirm(null)}
+                    onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
+                    documentName={deleteConfirm?.name || ""}
+                />
             </div>
-
-            {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-                {/* Uploader */}
-                {user && <DocumentUploader userId={user.uid} />}
-
-                {/* Document List */}
-                <AnimatePresence mode="wait">
-                    {filteredDocuments.length === 0 ? (
-                        <motion.div
-                            key="empty"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                            className="flex flex-col items-center justify-center py-16 text-center"
-                        >
-                            <div className="w-20 h-20 rounded-2xl bg-[#1a1a1a] border border-white/10 flex items-center justify-center mb-4">
-                                <FolderOpen className="w-10 h-10 text-[#D1F441]/50" />
-                            </div>
-                            <h3 className="text-xl font-semibold text-white mb-2">
-                                {activeFilter === "all" ? "No documents yet" : `No ${activeFilter} documents`}
-                            </h3>
-                            <p className="text-white/40 mb-6 max-w-sm">
-                                Upload your first document to get started
-                            </p>
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="list"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="space-y-3"
-                        >
-                            {filteredDocuments.map((doc) => (
-                                <DocumentCard
-                                    key={doc.id}
-                                    document={doc}
-                                    onEdit={() => handleEdit(doc)}
-                                    onDelete={() => setDeleteConfirm(doc)}
-                                />
-                            ))}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
-
-            {/* Edit Modal */}
-            <DocumentModal
-                isOpen={editModalOpen}
-                onClose={() => {
-                    setEditModalOpen(false);
-                    setSelectedDocument(null);
-                }}
-                document={selectedDocument}
-            />
-
-            {/* Delete Confirmation */}
-            <DeleteConfirmModal
-                isOpen={!!deleteConfirm}
-                onClose={() => setDeleteConfirm(null)}
-                onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
-                documentName={deleteConfirm?.name || ""}
-            />
-        </main>
+        </DashboardLayout>
     );
 }
 
@@ -252,14 +222,14 @@ function FilterTab({ active, onClick, icon, label, count }: FilterTabProps) {
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all text-sm font-medium whitespace-nowrap ${active
-                    ? "bg-[#D1F441] text-[#0f0f0f]"
-                    : "bg-[#1a1a1a] text-white/60 hover:text-white border border-white/10"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-sm transition-all text-sm font-medium whitespace-nowrap border-b-2 ${active
+                ? "border-white text-white"
+                : "border-transparent text-[#9B9B9B] hover:text-white"
                 }`}
         >
             {icon}
             <span>{label}</span>
-            <span className={`text-xs ${active ? "text-[#0f0f0f]/60" : "text-white/40"}`}>
+            <span className={`text-xs ${active ? "text-white/60" : "text-white/40"}`}>
                 ({count})
             </span>
         </button>

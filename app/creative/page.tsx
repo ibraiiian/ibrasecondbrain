@@ -22,6 +22,7 @@ import PromptModal from "@/components/PromptModal";
 import AssetCard from "@/components/AssetCard";
 import AssetUploader from "@/components/AssetUploader";
 import Lightbox from "@/components/Lightbox";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 type TabType = "prompts" | "assets";
 
@@ -107,87 +108,48 @@ export default function CreativePage() {
     }
 
     return (
-        <main className="min-h-screen bg-[#0f0f0f]">
-            {/* Header */}
-            <header className="sticky top-0 z-40 bg-[#0f0f0f]/80 backdrop-blur-lg border-b border-white/10">
-                <div className="max-w-7xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => router.push("/dashboard")}
-                                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                            >
-                                <ArrowLeft className="w-5 h-5 text-white/60" />
-                            </button>
-                            <div className="flex items-center gap-3">
-                                <div className="w-14 h-14 flex items-center justify-center">
-                                    <img src="/logo.png" alt="IbraBrain" className="w-full h-full object-contain" />
-                                </div>
-                                <div>
-                                    <h1 className="text-xl font-bold text-white">IbraBrain Creative</h1>
-                                    <p className="text-xs text-white/40">
-                                        {activeTab === "prompts" ? `${prompts.length} prompts` : `${assets.length} assets`}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            {user?.photoURL && (
-                                <img
-                                    src={user.photoURL}
-                                    alt={user.displayName || "User"}
-                                    className="w-8 h-8 rounded-full border border-white/10"
-                                />
-                            )}
-                            <button
-                                onClick={handleSignOut}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#1a1a1a] border border-white/10 text-white/60 hover:text-white transition-all text-sm"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                <span className="hidden sm:inline">Sign Out</span>
-                            </button>
+        <DashboardLayout>
+            <div className="max-w-7xl mx-auto py-12 px-8">
+                {/* Header Section */}
+                <div className="mb-8 relative group">
+                    <div className="flex items-center gap-4">
+                        <div className="text-6xl select-none">✨</div>
+                        <div>
+                            <h1 className="text-4xl font-bold text-[#FFFFFF] mb-1">Creative Hub</h1>
+                            <p className="text-[#9B9B9B] text-lg">AI Prompts & Visual Assets.</p>
                         </div>
                     </div>
                 </div>
-            </header>
+            </div>
 
-            {/* Tabs */}
-            <div className="sticky top-[73px] z-30 bg-[#0f0f0f]/80 backdrop-blur-lg border-b border-white/10">
-                <div className="max-w-7xl mx-auto px-4 py-3">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-2 bg-[#1a1a1a] p-1 rounded-xl">
-                            <TabButton
-                                active={activeTab === "prompts"}
-                                onClick={() => setActiveTab("prompts")}
-                                icon={<Sparkles className="w-4 h-4" />}
-                                label="Prompt Library"
-                                accentColor="#D1F441"
-                            />
-                            <TabButton
-                                active={activeTab === "assets"}
-                                onClick={() => setActiveTab("assets")}
-                                icon={<Image className="w-4 h-4" />}
-                                label="Asset Gallery"
-                                accentColor="#5D5FEF"
-                            />
-                        </div>
-
-                        {activeTab === "prompts" && (
-                            <motion.button
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => openPromptModal()}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#D1F441] hover:bg-[#c5e83b] text-[#0f0f0f] font-semibold transition-all text-sm"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span className="hidden sm:inline">New Prompt</span>
-                            </motion.button>
-                        )}
+            {/* Tabs & Actions */}
+            <div className="flex items-center justify-between mb-6 pb-2 border-b border-[#2F2F2F]">
+                <div className="flex items-center gap-2 text-sm">
+                    <div
+                        onClick={() => setActiveTab("prompts")}
+                        className={`cursor-pointer pb-2 border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'prompts' ? 'border-white text-white' : 'border-transparent text-[#9B9B9B] hover:text-white'}`}
+                    >
+                        <Sparkles className="w-4 h-4" />
+                        Prompt Library
+                    </div>
+                    <div
+                        onClick={() => setActiveTab("assets")}
+                        className={`cursor-pointer pb-2 border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'assets' ? 'border-white text-white' : 'border-transparent text-[#9B9B9B] hover:text-white'}`}
+                    >
+                        <Image className="w-4 h-4" />
+                        Asset Gallery
                     </div>
                 </div>
+
+                {activeTab === "prompts" && (
+                    <button
+                        onClick={() => openPromptModal()}
+                        className="flex items-center gap-1 bg-[#202020] hover:bg-[#2C2C2C] text-[#FFFFFF] px-3 py-1 rounded-sm text-sm border border-[#2F2F2F] transition-colors"
+                    >
+                        <Plus className="w-4 h-4" />
+                        New Prompt
+                    </button>
+                )}
             </div>
 
             {/* Content */}
@@ -295,30 +257,7 @@ export default function CreativePage() {
                 onConfirm={() => deleteAssetConfirm && handleDeleteAsset(deleteAssetConfirm)}
                 title="Delete Asset?"
             />
-        </main>
-    );
-}
-
-// Tab Button Component
-interface TabButtonProps {
-    active: boolean;
-    onClick: () => void;
-    icon: React.ReactNode;
-    label: string;
-    accentColor: string;
-}
-
-function TabButton({ active, onClick, icon, label, accentColor }: TabButtonProps) {
-    return (
-        <button
-            onClick={onClick}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-medium ${active ? "bg-white/10" : "text-white/40 hover:text-white/60"
-                }`}
-            style={active ? { color: accentColor } : undefined}
-        >
-            {icon}
-            <span className="hidden sm:inline">{label}</span>
-        </button>
+        </DashboardLayout>
     );
 }
 

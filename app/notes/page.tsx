@@ -18,7 +18,7 @@ import {
 import { User } from "firebase/auth";
 import { onAuthChange, signOut } from "@/lib/auth";
 import { Note, NoteType, subscribeToNotes, deleteNote } from "@/lib/notes";
-import NoteCard from "@/components/NoteCard";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import NoteModal from "@/components/NoteModal";
 
 type FilterType = "ALL" | "NOTE" | "PASSWORD";
@@ -37,16 +37,14 @@ export default function NotesPage() {
     // Auth check
     useEffect(() => {
         const unsubscribe = onAuthChange((currentUser: User | null) => {
-            if (!currentUser) {
-                router.push("/");
-            } else {
+            if (currentUser) {
                 setUser(currentUser);
                 setLoading(false);
             }
         });
 
         return () => unsubscribe();
-    }, [router]);
+    }, []);
 
     // Subscribe to notes
     useEffect(() => {
@@ -73,11 +71,6 @@ export default function NotesPage() {
         );
     });
 
-    const handleSignOut = async () => {
-        await signOut();
-        router.push("/");
-    };
-
     const openNoteModal = useCallback((note?: Note) => {
         setSelectedNote(note || null);
         setModalOpen(true);
@@ -94,160 +87,119 @@ export default function NotesPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
+            <div className="min-h-screen flex items-center justify-center bg-[#191919]">
                 <Loader2 className="w-8 h-8 text-[#D1F441] animate-spin" />
             </div>
         );
     }
 
     return (
-        <main className="min-h-screen bg-[#0f0f0f]">
-            {/* Header */}
-            <header className="sticky top-0 z-40 bg-[#0f0f0f]/80 backdrop-blur-lg border-b border-white/10">
-                <div className="max-w-7xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => router.push("/dashboard")}
-                                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                                title="Back to Dashboard"
-                            >
-                                <ArrowLeft className="w-5 h-5 text-white/60" />
-                            </button>
-                            <div className="flex items-center gap-3">
-                                <div className="w-14 h-14 flex items-center justify-center">
-                                    <img src="/logo.png" alt="IbraBrain" className="w-full h-full object-contain" />
-                                </div>
-                                <div>
-                                    <h1 className="text-xl font-bold text-white">IbraBrain Notes</h1>
-                                    <p className="text-xs text-white/40">{notes.length} items</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            {user?.photoURL && (
-                                <img
-                                    src={user.photoURL}
-                                    alt={user.displayName || "User"}
-                                    className="w-8 h-8 rounded-full border border-white/10"
-                                />
-                            )}
-                            <button
-                                onClick={handleSignOut}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#1a1a1a] border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-all text-sm"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                <span className="hidden sm:inline">Sign Out</span>
-                            </button>
+        <DashboardLayout>
+            <div className="max-w-4xl mx-auto py-12 px-8">
+                {/* Header Section */}
+                <div className="mb-8 relative group">
+                    <div className="flex items-center gap-4">
+                        <div className="text-6xl select-none">📝</div>
+                        <div>
+                            <h1 className="text-4xl font-bold text-[#FFFFFF] mb-1">Notes</h1>
+                            <p className="text-[#9B9B9B] text-lg">Capture your thoughts and ideas.</p>
                         </div>
                     </div>
                 </div>
-            </header>
 
-            {/* Toolbar */}
-            <div className="sticky top-[73px] z-30 bg-[#0f0f0f]/80 backdrop-blur-lg border-b border-white/10">
-                <div className="max-w-7xl mx-auto px-4 py-3">
-                    <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                        {/* Filter Tabs */}
-                        <div className="flex items-center gap-2 bg-[#1a1a1a] p-1 rounded-xl">
-                            <FilterButton
-                                active={filter === "ALL"}
-                                onClick={() => setFilter("ALL")}
-                                icon={<Filter className="w-4 h-4" />}
-                                label="All"
-                            />
-                            <FilterButton
-                                active={filter === "NOTE"}
-                                onClick={() => setFilter("NOTE")}
-                                icon={<FileText className="w-4 h-4" />}
-                                label="Notes"
-                                accentColor="#D1F441"
-                            />
-                            <FilterButton
-                                active={filter === "PASSWORD"}
-                                onClick={() => setFilter("PASSWORD")}
-                                icon={<Lock className="w-4 h-4" />}
-                                label="Passwords"
-                                accentColor="#5D5FEF"
+                {/* Toolbar */}
+                <div className="flex items-center justify-between mb-6 pb-2 border-b border-[#2F2F2F]">
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 text-[#FFFFFF] font-medium border-b-2 border-[#FFFFFF] pb-2 text-sm cursor-pointer">
+                            List View
+                        </div>
+                        {/* Removed Gallery View option for now as requested "Notion List View" style */}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 px-2 py-1 bg-[#202020] hover:bg-[#2C2C2C] rounded text-sm text-[#9B9B9B] border border-[#2F2F2F] w-48 transition-colors">
+                            <Search className="w-4 h-4" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search"
+                                className="bg-transparent border-none focus:outline-none text-[#FFFFFF] placeholder-[#5A5A5A] text-sm w-full"
                             />
                         </div>
-
-                        {/* Search & Add */}
-                        <div className="flex items-center gap-3">
-                            <div className="relative flex-1 sm:w-64">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search notes..."
-                                    className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl pl-10 pr-4 py-2 text-white placeholder:text-white/30 focus:outline-none focus:border-[#D1F441]/50 text-sm"
-                                />
-                            </div>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => openNoteModal()}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#D1F441] hover:bg-[#c5e83b] text-[#0f0f0f] font-semibold transition-all text-sm"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span className="hidden sm:inline">Add New</span>
-                            </motion.button>
-                        </div>
+                        <button
+                            onClick={() => openNoteModal()}
+                            className="flex items-center gap-1 bg-[#202020] hover:bg-[#2C2C2C] text-[#FFFFFF] px-3 py-1 rounded-sm text-sm border border-[#2F2F2F] transition-colors"
+                        >
+                            <Plus className="w-4 h-4" />
+                            New
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 py-6">
-                {filteredNotes.length === 0 ? (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col items-center justify-center py-20 text-center"
-                    >
-                        <div className="w-20 h-20 rounded-2xl bg-[#1a1a1a] border border-white/10 flex items-center justify-center mb-4">
-                            {filter === "PASSWORD" ? (
-                                <Lock className="w-10 h-10 text-[#5D5FEF]/50" />
-                            ) : (
-                                <FileText className="w-10 h-10 text-[#D1F441]/50" />
-                            )}
-                        </div>
-                        <h3 className="text-xl font-semibold text-white mb-2">
-                            {searchQuery ? "No results found" : "No items yet"}
-                        </h3>
-                        <p className="text-white/40 mb-6 max-w-sm">
-                            {searchQuery
-                                ? `No ${filter === "ALL" ? "items" : filter.toLowerCase() + "s"} match "${searchQuery}"`
-                                : `Start by creating your first ${filter === "PASSWORD" ? "password" : "note"}`}
-                        </p>
-                        {!searchQuery && (
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => openNoteModal()}
-                                className="flex items-center gap-2 px-6 py-3 rounded-full bg-[#D1F441] hover:bg-[#c5e83b] text-[#0f0f0f] font-semibold transition-all"
-                            >
-                                <Plus className="w-5 h-5" />
-                                Create First {filter === "PASSWORD" ? "Password" : "Note"}
-                            </motion.button>
+                {/* List View */}
+                <div className="flex flex-col">
+                    {/* List Header */}
+                    <div className="flex items-center px-4 py-2 border-b border-[#2F2F2F] text-xs font-semibold text-[#5A5A5A] uppercase tracking-wide">
+                        <div className="flex-1">Title</div>
+                        <div className="w-32">Date Created</div>
+                        <div className="w-32">Tags</div>
+                        <div className="w-10"></div>
+                    </div>
+
+                    {/* List Items */}
+                    <div className="mt-1">
+                        {filteredNotes.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20 text-[#5A5A5A]">
+                                <FileText className="w-12 h-12 mb-4 opacity-20" />
+                                <p>No notes found</p>
+                            </div>
+                        ) : (
+                            <AnimatePresence>
+                                {filteredNotes.map((note) => (
+                                    <motion.div
+                                        key={note.id}
+                                        layout
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="group flex items-center px-4 py-2 hover:bg-[#2C2C2C] border-b border-transparent hover:border-[#2F2F2F] transition-colors cursor-pointer rounded-sm"
+                                        onClick={() => openNoteModal(note)}
+                                    >
+                                        <div className="flex-1 flex items-center gap-3 overflow-hidden">
+                                            <FileText className="w-4 h-4 text-[#9B9B9B] shrink-0" />
+                                            <span className="text-sm text-[#FFFFFF] font-medium truncate">{note.title || "Untitled"}</span>
+                                        </div>
+                                        <div className="w-32 text-xs text-[#9B9B9B]">
+                                            {note.createdAt?.seconds ? new Date(note.createdAt.seconds * 1000).toLocaleDateString() : '-'}
+                                        </div>
+                                        <div className="w-32 flex gap-1 overflow-hidden">
+                                            {note.tags && note.tags.length > 0 ? (
+                                                note.tags.slice(0, 2).map((tag, i) => (
+                                                    <span key={i} className="px-1.5 py-0.5 rounded bg-[#3F3F3F] text-[#9B9B9B] text-[10px] truncate max-w-[80px]">
+                                                        {tag}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="text-[#5A5A5A] text-xs">-</span>
+                                            )}
+                                        </div>
+                                        <div className="w-10 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDeleteConfirm(note.id);
+                                                }}
+                                                className="p-1 hover:bg-[#3F3F3F] rounded text-[#9B9B9B] hover:text-red-400 transition-colors"
+                                            >
+                                                <LogOut className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
                         )}
-                    </motion.div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <AnimatePresence mode="popLayout">
-                            {filteredNotes.map((note) => (
-                                <NoteCard
-                                    key={note.id}
-                                    note={note}
-                                    onClick={() => openNoteModal(note)}
-                                    onDelete={() => setDeleteConfirm(note.id)}
-                                />
-                            ))}
-                        </AnimatePresence>
                     </div>
-                )}
+                </div>
             </div>
 
             {/* Note Modal */}
@@ -275,25 +227,25 @@ export default function NotesPage() {
                             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
                         />
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
+                            initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#1a1a1a] rounded-2xl border border-white/10 p-6 z-50 w-full max-w-sm"
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#202020] rounded-lg border border-[#2F2F2F] p-6 z-50 w-full max-w-sm"
                         >
-                            <h3 className="text-lg font-semibold text-white mb-2">Delete Item?</h3>
-                            <p className="text-white/60 text-sm mb-6">
-                                This action cannot be undone. The item will be permanently deleted.
+                            <h3 className="text-lg font-semibold text-[#FFFFFF] mb-2">Delete Note?</h3>
+                            <p className="text-[#9B9B9B] text-sm mb-6">
+                                This action cannot be undone.
                             </p>
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 justify-end">
                                 <button
                                     onClick={() => setDeleteConfirm(null)}
-                                    className="flex-1 py-2 rounded-full border border-white/10 text-white/60 hover:border-white/20 transition-all"
+                                    className="px-4 py-2 rounded text-[#9B9B9B] hover:bg-[#2C2C2C] hover:text-[#FFFFFF] transition-colors text-sm"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={() => handleDelete(deleteConfirm)}
-                                    className="flex-1 py-2 rounded-full bg-red-500 hover:bg-red-600 text-white font-medium transition-all"
+                                    className="px-4 py-2 rounded bg-red-900/30 text-red-200 hover:bg-red-900/50 transition-colors text-sm font-medium"
                                 >
                                     Delete
                                 </button>
@@ -302,7 +254,7 @@ export default function NotesPage() {
                     </>
                 )}
             </AnimatePresence>
-        </main>
+        </DashboardLayout>
     );
 }
 
